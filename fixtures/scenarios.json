@@ -1,0 +1,57 @@
+{
+  "entry": "/bulletin",
+  "documents": [
+    {
+      "id": "routine",
+      "path": "routine.txt",
+      "format": "text",
+      "file": "00.raw",
+      "task": "task-1",
+      "batch": "batch-local",
+      "serviceRoot": "/raw/",
+      "revision": 1
+    },
+    {
+      "id": "special",
+      "path": "special.txt",
+      "format": "text",
+      "file": "01.raw",
+      "task": "task-1",
+      "batch": "batch-local",
+      "serviceRoot": "/raw/",
+      "revision": 1
+    },
+    {
+      "id": "correction",
+      "path": "corrected.txt",
+      "format": "text",
+      "file": "02.raw",
+      "task": "task-1",
+      "batch": "batch-local",
+      "serviceRoot": "/raw/",
+      "revision": 1
+    },
+    {
+      "id": "nil",
+      "path": "nil.txt",
+      "format": "text",
+      "file": "03.raw",
+      "task": "task-1",
+      "batch": "batch-local",
+      "serviceRoot": "/raw/",
+      "revision": 1
+    }
+  ],
+  "changedDocument": "correction",
+  "replaceFrom": "10006KT",
+  "replaceTo": "11007KT",
+  "expectedIds": [
+    "ZAAA:2026-10-31T23:50:00Z:METAR",
+    "ZAAA:2026-11-01T00:05:00Z:SPECI",
+    "ZBBB:2026-11-01T00:10:00Z:METAR"
+  ],
+  "transmissionWindow": [
+    "2026-10-31T23:00:00Z",
+    "2026-11-01T01:00:00Z"
+  ]
+}
