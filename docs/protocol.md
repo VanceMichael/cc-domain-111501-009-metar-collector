@@ -23,3 +23,10 @@
 5. 在原始资料已保存、关系尚未提交等边界终止进程，再启动能识别待完成工作；不得靠固定样本答案实现。
 
 `acceptance/managed.test.mjs`仅覆盖关键正例及重启重投，改动时需按以上矩阵增加适合方案的异常和来源变化测试。资料未齐时保留可解释未决，不为“通过”填充不存在的源值。
+
+## 实现落点
+
+- `src/metar.mjs`：纯函数解析，无网络无时钟。`parseReport`保留每个字段的原始组与来源位置，并以 `notReported` 区分斜杠未报与数值零；`resolveObservationTime` 仅按传输窗口枚举月份候选，`ambiguous`/`outside-window` 均不产生业务身份。
+- `src/managed.mjs`：managed 采集。阶段一按目录留存字节并登记 fetched/missing/fetch-failed；阶段二只解释已留存字节，COR 追加修订、非 COR 异文挂 `IDENTITY_CONFLICT`、NIL 独立成记录、未知组挂 `UNEXPLAINED_GROUPS`。`managed` 索引每步落盘，重启后只续做未完成文档。
+- `src/repository.mjs`：`evidence` 保存文件级原始字节与 ETag/修订元数据，`state.managed` 保存文档索引、报告修订与 pending，`notes` 保存带资料位置的人工诊断；旧版无 managed 槽位的 state 打开时自动补齐。
+- 输出记录中 `revisions[].observedRaw` 与 digest 可回溯到 `raw/<digest>` 原件；便利字段（wind/visibility/rvr/clouds 等）与字段级来源同源，不产生预报或适航判断。

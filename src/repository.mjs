@@ -2,16 +2,20 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 
+const EMPTY_STATE = () => ({ records: {}, cursors: {}, evidence: {}, notes: [], managed: null });
+
 export class Repository {
   constructor(directory) {
     this.directory = directory;
-    this.state = { records: {}, cursors: {}, evidence: {}, notes: [] };
+    this.state = EMPTY_STATE();
   }
 
   async open() {
     await mkdir(join(this.directory, 'raw'), { recursive: true });
     try {
-      this.state = JSON.parse(await readFile(join(this.directory, 'state.json'), 'utf8'));
+      const stored = JSON.parse(await readFile(join(this.directory, 'state.json'), 'utf8'));
+      // 旧版本 state 没有 managed 槽位，打开时补齐，旧记录与原始字节保持可读。
+      this.state = { ...EMPTY_STATE(), ...stored };
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
@@ -39,14 +43,33 @@ export class Repository {
     return digest;
   }
 
+  async readRaw(digest) {
+    return readFile(join(this.directory, 'raw', digest));
+  }
+
   async cursor(name, value) {
     this.state.cursors[name] = structuredClone(value);
     await this.save();
   }
 
   async note(value) {
-    this.state.notes.push(structuredClone(value));
+    this.state.notes.push(structuredClone({ seq: this.state.notes.length + 1, ...value }));
     await this.save();
+  }
+
+  // managed 模式的索引与阶段状态：每个文档完成一步即落盘，保证边界终止后可续。
+  async getManaged() {
+    return this.state.managed ? structuredClone(this.state.managed) : null;
+  }
+
+  async saveManaged(managed) {
+    this.state.managed = structuredClone(managed);
+    await this.save();
+  }
+
+  getRecord(id) {
+    const record = this.state.records[id];
+    return record ? structuredClone(record) : undefined;
   }
 
   records() {
